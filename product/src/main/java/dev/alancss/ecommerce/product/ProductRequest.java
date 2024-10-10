@@ -2,7 +2,7 @@ package dev.alancss.ecommerce.product;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
@@ -13,10 +13,10 @@ public record ProductRequest(
         @NotBlank(message = "Product description is required")
         String description,
 
-        @PositiveOrZero(message = "Available quantity should be positive or zero")
+        @Positive(message = "Available quantity should be positive")
         double availableQuantity,
 
-        @PositiveOrZero(message = "Price should be positive")
+        @Positive(message = "Price should be positive")
         BigDecimal price,
 
         @NotNull(message = "Category ID is required")
