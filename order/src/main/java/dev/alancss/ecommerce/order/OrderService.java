@@ -6,6 +6,8 @@ import dev.alancss.ecommerce.exception.OrderNotFoundException;
 import dev.alancss.ecommerce.kafka.OrderProducer;
 import dev.alancss.ecommerce.orderline.OrderLineRequest;
 import dev.alancss.ecommerce.orderline.OrderLineService;
+import dev.alancss.ecommerce.payment.PaymentClient;
+import dev.alancss.ecommerce.payment.PaymentMapper;
 import dev.alancss.ecommerce.product.ProductClient;
 import dev.alancss.ecommerce.product.PurchaseRequest;
 import jakarta.validation.Valid;
@@ -24,6 +26,8 @@ public class OrderService {
     private final OrderMapper mapper;
     private final OrderLineService orderLineService;
     private final OrderProducer orderProducer;
+    private final PaymentClient paymentClient;
+    private final PaymentMapper paymentMapper;
 
     public Integer createOrder(@Valid OrderRequest request) {
         var customer = customerClient.getCustomerById(request.customerId())
@@ -37,11 +41,12 @@ public class OrderService {
             var productId = purchaseRequest.productId();
             double quantity = purchaseRequest.quantity();
 
-            var orderLineRequest = new OrderLineRequest(order.getId(), productId, quantity);
+            var orderLineRequest = new OrderLineRequest(order, productId, quantity);
             orderLineService.saveOrderLine(orderLineRequest);
         }
 
-        // TODO start payment process
+        var paymentRequest = paymentMapper.toPaymentRequest(order, customer);
+        paymentClient.sendPayment(paymentRequest);
 
         var orderConfirmation = mapper.toOrderConfirmation(order, customer, purchasedProducts);
         orderProducer.sendOrderConfirmation(orderConfirmation);
